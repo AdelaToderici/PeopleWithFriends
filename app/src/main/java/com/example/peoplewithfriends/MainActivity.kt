@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView_main.layoutManager = LinearLayoutManager(this)
 
         // - get person id sent by intent
-        val personId = intent.getStringExtra("PERSON_ID")
+        val personId = intent.getStringExtra(FriendsViewHolder.PERSON_ID_KEY)
         if (personId != null && personId.length > 0) {
             // - fetch data when friend row selected
             fetchData(personId)
@@ -68,9 +68,10 @@ class MainActivity : AppCompatActivity() {
         showProgressBar()
 
         // - url configuration
-        var url = "https://interview-api.shiftboard.com/person"
+        var url = RANDOM_PERSON_API_URL
+
         if (personId != null) {
-            url += "/" + personId
+            url = String.format(PERSON_API_URL_FORMAT, personId)
         }
 
         // - request configuration
@@ -117,22 +118,9 @@ class MainActivity : AppCompatActivity() {
     // - Data configuration for adapter
     private fun configureData(person: PersonModel): List<Any> {
 
-        // - configure PersonSummaryModel
-        val personSummary = PersonSummaryModel(
-            name = person.firstName.capitalize() + " " + person.lastName.capitalize(),
-            email = person.email,
-            imageURL = person.imageURL
-        )
-
-        // - configure AddressModel
-        val address = AddressModel(
-            address = person.address + " " + person.city + ", " + person.state + " " + person.zipCode
-        )
-
-        // - configure PhoneModel
-        val phoneNumber = PhoneModel(
-            phoneNumber = person.phoneNumber
-        )
+        val personSummary = Mapper.mapPersonSummary(person)
+        val address = Mapper.mapAddress(person)
+        val phoneNumber = Mapper.mapPhone(person)
 
         // - create list to add all objects
         val list = mutableListOf<Any>()
@@ -147,21 +135,15 @@ class MainActivity : AppCompatActivity() {
         // - add phone model
         list.add(phoneNumber)
 
-
         if (person.friends != null && person.friends.count() > 0) {
             // - add firends string header
             list.add(Header_Type.FRIENDS.type)
 
             for (friend in person.friends) {
                 // - configure friend model
-                val f = FriendModel(
-                    name = friend.firstName.capitalize() + " " + friend.lastName.capitalize(),
-                    email = friend.email,
-                    id = friend.id,
-                    imageURL = friend.imageURL
-                )
+                val friendModel = Mapper.mapFriend(friend)
                 // - add friend model
-                list.add(f)
+                list.add(friendModel)
             }
         }
 
